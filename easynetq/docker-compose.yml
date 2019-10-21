@@ -1,0 +1,30 @@
+version: "2.4"
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.0-alpine
+    hostname: rabbitmq
+    healthcheck:
+      test: nc -z localhost 5672 || exit -1
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  publisher:
+    image: acme/publisher:1.0
+    build: 
+      context: .
+      dockerfile: Dockerfile-publisher
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  consumer:
+    image: acme/consumer:1.0
+    build: 
+      context: .
+      dockerfile: Dockerfile-consumer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    

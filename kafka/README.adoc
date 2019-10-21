@@ -1,0 +1,121 @@
+= Sample Application using Kafka
+
+== Building the Schemas
+
+You can use the Avro serializer and deserializer with the `GenericRecord` class or with specific classes generated using the `avrogen` tool, available via Nuget (.NET Core 2.1 required):
+
+    dotnet tool install -g Confluent.Apache.Avro.AvroGen
+
+Usage
+
+    avrogen -s <schemafile> <outputdir>
+
+More info here: https://www.confluent.io/blog/decoupling-systems-with-apache-kafka-schema-registry-and-avro/
+
+== Running Kafka
+
+. To run YooKeeper, Kafka and the Schema Registry use the following command:
++
+[source]
+--
+docker-compose up -d schema-registry
+--
+
+. Create the topic `test-topic` with the following command:
++
+[source]
+--
+docker-compose exec kafka kafka-topics \
+    --bootstrap-server kafka:9092 \
+    --create \
+    --topic test-topic \
+    --partitions 3 \
+    --replication-factor 1
+--
++
+NOTE: Here we're using the tool `kafka-topics` which is available inside the `kafka` container.
+
+== Running the Confluent Control Center
+
+To monitor our streaming platform let's run the Confluent Control Center.
+
+. Use the following command to start the control center:
++
+[source]
+--
+docker-compose up -d control-center
+--
++
+Give it a couple of minutes to start up
+
+. Open a new browser tab and navigate to http://localhost:9021
+.. Select cluster `Cluster1` on the left side of the view and explore...
+.. Navigate to *Topics* and select topic `test-topic`
+... Explore incoming messages on the *Messages* tab
+... Explore the schema of the messages on the *Schema* tab
+.. Navigate to *Consumers* and select `demo-consumer-group`
+... Explore the *Consumer lag* and the *Consumption* tabs
+
+== Running the Producer
+
+We can run and debug the producer directly from the host, if we first modify the `hosts` file.
+
+. To the `hosts` file of your computer add the following settings and save:
++
+[source]
+--
+127.0.0.1 kafka schema-registry
+--
++
+that is, the names `kafka` and `schema-registry` are mapped to `localhost`.
+
+. Test that the mappings are working with `ping kafka` and `ping schema-registry`
+
+. Run the publisher from the host. First navigate to the `publisher` folder:
++
+[source]
+--
+cd publisher
+dotnet run
+--
++
+Stop the publisher by pressing `CTRL-c`.
+
+. Now build the publisher image and run a container from it:
++
+[source]
+--
+docker-compose up -d--build publisher
+--
+
+== Running the Consumer
+
+We can run and debug the consumer directly on the host, given that we modified the `hosts` file as indicated in the previous section.
+
+. Run the publisher from the host. First navigate to the `consumer` folder:
++
+[source]
+--
+cd consumer
+dotnet run
+--
++
+Stop the consumer by pressing `CTRL-c`.
+
+. Now build the consumer image and run a container from it:
++
+[source]
+--
+docker-compose up -d--build consumer
+--
+
+== Scaling the Consumer
+
+. To scale the consumer to 3 instances use the following command:
++
+[source]
+--
+docker-compose up -d --scale consumer=3
+--
+
+. Observe the behavior in the Control Center under *Consumers* and notice that each consumer instance is assigned exactly one partition.

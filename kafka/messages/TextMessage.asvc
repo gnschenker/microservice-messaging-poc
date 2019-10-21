@@ -1,0 +1,9 @@
+{ 
+  "namespace": "messages",
+  "type": "record",
+  "doc": "A simple text message type as used by this sample app",
+  "name": "TextMessage",
+  "fields": [
+    { "name": "Text", "type": "string" },
+  ]
+}
