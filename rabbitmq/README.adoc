@@ -1,0 +1,57 @@
+= Running a Sample Setup using the standard RabbitMQ Client Library
+
+. Navigate into folder `rabbitmq`
++
+[source]
+--
+cd rabbitmq
+--
+
+. Build and run the application:
++
+[source]
+--
+docker-compose up --build
+--
+
+. Stop the app with `CTRL-c`
+
+. Remove the application with
++
+[source]
+--
+docker-compose down -v
+--
+
+== Scaling the consumer
+
+. Run the application:
++
+[source]
+--
+docker-compose up -d
+--
+
+. Scale the consumer:
++
+[source]
+--
+docker-compose up -d --scale consumer=3
+--
+
+. Follow the logs:
+un the application:
++
+[source]
+--
+docker-compose logs -f
+--
++
+stop following the logs with `CTRL-c`
+
+. Remove the application with
++
+[source]
+--
+docker-compose down -v
+--

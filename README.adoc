@@ -1,0 +1,7 @@
+= POC testing Message Transport for Microservices
+
+In this POC I have a single setup where service A is a publisher of messages and service B is a consumer of those same messages. I am using RabbitMQ and Apache Kafka as message bus.
+
+. link:rabbitmq[rabbitmq]: Setup using RabbitMQ and the standard .NET client library for RabbitMQ
+. link:easynetq/[easynetq]: Setup using RabbitMQ and the opinionated *EasyNetQ* .NET client library for RabbitMQ
+. link:kafka/[kafka]: Using Apache Kafka together with the Schema Registry to publish and consume AVRO formatted messages
