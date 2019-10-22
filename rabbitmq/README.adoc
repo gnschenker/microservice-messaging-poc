@@ -1,5 +1,7 @@
 = Running a Sample Setup using the standard RabbitMQ Client Library
 
+This is the least elaborate sample as it does not involve any custom types for messages but only uses simple strings. Serialization and deserialization still need to be explicitly added. The other two examples (EasyNetQ and Apache Kafka) provide the same out of the box.
+
 . Navigate into folder `rabbitmq`
 +
 [source]

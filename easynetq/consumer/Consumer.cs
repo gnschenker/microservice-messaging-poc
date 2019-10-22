@@ -20,7 +20,7 @@ namespace consumer
             Console.WriteLine("Waiting for messages...");
             Console.WriteLine(" Press CTRL-c to exit.");
             Console.CancelKeyPress += (sender, args) => {
-                Console.WriteLine("Exit");
+                Console.WriteLine("Exiting...");
                 _closing.Set();
             };
             _closing.WaitOne();
@@ -28,7 +28,7 @@ namespace consumer
 
         private static void Consuming()
         {
-            Console.WriteLine("Start consuming!");
+            Console.WriteLine(">>> Start consuming!");
             using (var bus = RabbitHutch.CreateBus($"host={RABBIT_HOST}"))
             {
                 bus.Subscribe<TextMessage>("test", message => {
@@ -36,7 +36,7 @@ namespace consumer
                 });
                 _closing.WaitOne();
             }
-            Console.WriteLine("End consuming!");
+            Console.WriteLine("<<< End consuming!");
         }
     }
 }
