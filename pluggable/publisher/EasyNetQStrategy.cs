@@ -20,6 +20,9 @@ namespace publisher
         }
 
         public void Dispose()
-        {}
+        {
+            if(bus != null)
+                bus.Dispose();
+        }
     }
 }

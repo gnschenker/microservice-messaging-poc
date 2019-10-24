@@ -19,12 +19,12 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  # consumer:
-  #   image: acme/consumer:1.0
-  #   build: 
-  #     context: .
-  #     dockerfile: Dockerfile-consumer
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
+  consumer:
+    image: acme/consumer:1.0
+    build: 
+      context: .
+      dockerfile: Dockerfile-consumer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     
