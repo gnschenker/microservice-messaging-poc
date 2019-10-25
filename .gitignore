@@ -1,2 +1,6 @@
 bin
 obj
+.gradle
+build
+node_modules
+.settings

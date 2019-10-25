@@ -1,0 +1,37 @@
+= Stream Processing with Kafka
+
+The source data is from here: https://digitransit.fi/en/developers/apis/4-realtime-api/vehicle-positions/
+
+== Testing if data is written to the topic
+
+[source]
+--
+docker-compose exec kafka kafka-console-consumer \
+    --bootstrap-server kafka:9092 \
+    --topic vehicle-positions \
+    --from-beginning
+--
+
+== Using KSQL 
+
+. Start the KSQL CLI:
++
+[source]
+--
+docker-compose exec tools ksql http://ksql-server:8088
+--
+
+. Print the content of the topic `vehicle-positions`:
++
+[source]
+--
+ksql> print 'vehicle-positions' from beginning;
+--
+
+. Create a stream from the topic 'vehicle-positions':
++
+[source]
+--
+CREATE STREAM vp (VP VARCHAR)
+  WITH (KAFKA_TOPIC='vehicle-positions', VALUE_FORMAT='JSON');
+--

@@ -1,0 +1,8 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0
+WORKDIR /app
+COPY cc-validator-net/cc-validator-net.csproj ./cc-validator-net/
+COPY messages/messages.csproj ./messages/
+RUN dotnet restore cc-validator-net/cc-validator-net.csproj
+COPY . .
+WORKDIR /app/cc-validator-net
+CMD dotnet run

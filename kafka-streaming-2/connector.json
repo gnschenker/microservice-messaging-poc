@@ -1,0 +1,14 @@
+{
+    "name": "my-jdbc-source",
+    "config" : {
+        "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+        "tasks.max": "1",
+        "connection.url": "jdbc:postgres://db:5432/sampledb?user=pguser&password=topsecret",
+        "java.naming.provider.url": "jdbc:postgres://db:5432/sampledb?user=pguser&password=topsecret",
+        "table.whitelist": "cc_authentications",
+        "mode": "timestamp+incrementing",
+        "timestamp.column.id": "datetime",
+        "incrementing.column.name": "id",
+        "topic.prefix": "postgres-"
+    }
+  }

@@ -1,0 +1,105 @@
+= Sample Application using Kafka
+
+== Building the Schemas
+
+You can use the Avro serializer and deserializer with the `GenericRecord` class or with specific classes generated using the `avrogen` tool, available via Nuget (.NET Core 2.1 required):
+
+    dotnet tool install -g Confluent.Apache.Avro.AvroGen
+
+Usage
+
+    avrogen -s <schemafile> <outputdir>
+
+More info here: https://www.confluent.io/blog/decoupling-systems-with-apache-kafka-schema-registry-and-avro/
+
+== Running Kafka
+
+. To run YooKeeper, Kafka and the Schema Registry use the following command:
++
+[source]
+--
+docker-compose up -d schema-registry
+--
+
+. Create the topic `test-topic` with the following command:
++
+[source]
+--
+docker-compose exec kafka kafka-topics \
+    --bootstrap-server kafka:9092 \
+    --create \
+    --topic test-topic \
+    --partitions 3 \
+    --replication-factor 1
+--
++
+NOTE: Here we're using the tool `kafka-topics` which is available inside the `kafka` container.
+
+. Check for messages in the topic `test-topic` using the `kafka-avro-console-consumer`:
++
+[source]
+--
+docker-compose exec tools kafka-avro-console-consumer \
+    --bootstrap-server kafka:9092 \
+    --group demo-consumer \
+    --property schema.registry.url="http://schema-registry:8081" \
+    --topic test-topic \
+    --from-beginning
+--
+
+== Working with KSQL
+
+. Run the KSQL CLI:
++
+[source]
+--
+docker-compose exec tools ksql http://ksql-server:8088
+--
+
+. Create a stream authorizations from the topic `test-topic`:
++
+[source]
+--
+CREATE STREAM authorization (
+    provider VARCHAR,
+    ccnumber VARCHAR,
+    status VARCHAR
+) WITH(KAFKA_TOPIC='test-topic', VALUE_FORMAT='AVRO');
+--
+
+. Describe the new stream:
++
+[source]
+--
+DESCRIBE EXTENDED authorization;
+--
+
+. Make sure to get data from the beginning of the stream:
++
+[source]
+--
+SET 'auto.offset.reset'='earliest';
+--
+
+. Retrieve some data:
++
+[source]
+--
+SELECT * FROM authorization LIMIT 50;
+--
+
+. Only show failed authorization attempts:
++
+[source]
+--
+SELECT * FROM authorization WHERE status='FAIL';
+--
+
+== Using Kafka Streams
+
+. Run the fraud detector:
++
+[source]
+--
+docker-compose up 
+--

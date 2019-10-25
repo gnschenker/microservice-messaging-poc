@@ -1,0 +1,11 @@
+{ 
+  "namespace": "messages",
+  "type": "record",
+  "doc": "A record for CC Authorizations",
+  "name": "CCAuthorization",
+  "fields": [
+    { "name": "provider", "type": "string" },
+    { "name": "ccnumber", "type": "string" },
+    { "name": "status", "type": "string" }
+  ]
+}
