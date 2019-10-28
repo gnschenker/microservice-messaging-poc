@@ -1,10 +1,21 @@
-docker-compose up -d 
+docker-compose up -d schema-registry
+docker-compose up -d tools
+docker-compose up -d control-center
 
-echo "Waiting for Kafka Connect to be ready..."
-until $(curl --output /dev/null --silent --head --fail http://localhost:8083/); do
-    printf '.'
-    sleep 5
-done
+echo "Creating the topics..."
+docker-compose exec kafka kafka-topics \
+    --bootstrap-server kafka:9092 \
+    --create \
+    --topic cc-authorizations \
+    --partitions 3 \
+    --replication-factor 1
 
-echo "Creating MQTT source connector..."
-curl -X POST -H 'Content-Type: application/json' --data @connector.json http://localhost:8083/connectors
+docker-compose exec kafka kafka-topics \
+    --bootstrap-server kafka:9092 \
+    --create \
+    --topic potential-fraud \
+    --partitions 3 \
+    --replication-factor 1
+
+echo "Starting the CC Authorization provider..."
+docker-compose up -d cc-validator

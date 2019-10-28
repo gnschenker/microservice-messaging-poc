@@ -1,44 +1,67 @@
 package clients;
 
-import java.time.Duration;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Produced;
+
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import messages.CCAuthorization;
 
-public class FraudDetector {
+public class FraudDetector {  
+    static final String SOURCE_TOPIC = "cc-authorizations";
+    static final String SINK_TOPIC = "potential-fraud";
+    static final String SCHEMA_REGISTRY_URL = "http://schema-registry:8081";
+
     public static void main(String[] args) {
-        System.out.println("*** Starting Fraud Detector ***");
-        
+        doStream();
+    }
+
+    private static void doStream(){
+        System.out.println("*** Starting Fraud Detector Kafka Streams application ***");
         Properties settings = new Properties();
-        settings.put(ConsumerConfig.GROUP_ID_CONFIG, "fraud-detector");
-        settings.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
+        settings.put(StreamsConfig.APPLICATION_ID_CONFIG, "fraud-detector");
+        settings.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
         settings.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        settings.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        settings.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
-        settings.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true");
-        settings.put("schema.registry.url", "http://schema-registry:8081");
 
-        KafkaConsumer<String, CCAuthorization> consumer = new KafkaConsumer<>(settings);
-        try {
-            consumer.subscribe(Arrays.asList("test-topic"));
+        Topology topology = getTopology();
+        KafkaStreams streams = new KafkaStreams(topology, settings);
 
-            while (true) {
-                ConsumerRecords<String, CCAuthorization> records = consumer.poll(Duration.ofMillis(100));
-                for (ConsumerRecord<String, CCAuthorization> record : records)
-                    System.out.printf("offset = %d, key = %s, value = %s\n", 
-                        record.offset(), record.key().toString(), record.value().toString());
-            }
-        }
-        finally{
-            System.out.println("*** Ending Fraud Detector ***");
-            consumer.close();
-        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("<<< Stopping Fraud Detector Kafka Streams application");
+            streams.close();
+        }));
+
+        System.out.println("Starting to stream...");
+        streams.start();
+    }
+
+    private static Topology getTopology(){
+        final Serde<String> stringSerde = Serdes.String();
+        final Serde<CCAuthorization> valueSerde = new SpecificAvroSerde<CCAuthorization>();
+        final Map<String, String> serdeConfig =
+            Collections.singletonMap(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, 
+                                     SCHEMA_REGISTRY_URL);
+        valueSerde.configure(serdeConfig, false);
+
+        StreamsBuilder builder = new StreamsBuilder();
+        KStream<String, CCAuthorization> authorizations = builder
+            .stream(SOURCE_TOPIC, Consumed.with(stringSerde, valueSerde));
+        authorizations
+            .filter((key,value) -> value.getStatus().equals("FAIL"))
+            .to(SINK_TOPIC, Produced.with(stringSerde, valueSerde));
+        return builder.build();
     }
 }

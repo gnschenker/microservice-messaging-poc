@@ -12,7 +12,7 @@ namespace cc_validator_net
     {
         static readonly string KAFKA_HOST = "kafka:9092";
         static readonly string SCHEMA_REGISTRY_URL = "http://schema-registry:8081";
-        static readonly string TOPIC_NAME = "test-topic";
+        static readonly string TOPIC_NAME = "cc-authorizations";
         private static Random rnd = new Random((int)DateTime.Now.Ticks);
         private static string[] providers = new []{ "VISA", "Mastercard", "AMEX", "American Express" };
 
