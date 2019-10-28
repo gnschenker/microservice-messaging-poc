@@ -13,4 +13,4 @@ docker-compose -f docker-compose-kafka.yml exec kafka kafka-topics \
 echo "Topic 'test-topic' created."
 
 docker-compose -f docker-compose-kafka.yml up -d --build publisher
-# docker-compose up -d consumer
+docker-compose -f docker-compose-kafka.yml up -d --build consumer

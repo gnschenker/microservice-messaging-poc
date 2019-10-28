@@ -1,0 +1,96 @@
+= Using Strategy Pattern to abstract Message Bus
+
+The idea is to abstract the underlying message bus from the microservice developer. I am proposing to use the strategy pattern and have designed some simple interfaces for producers/publishers and subscribers.
+The publisher interface looks like this:
+
+[source]
+--
+public interface IPublisherStrategy<TKey,TMessage> : IDisposable where TMessage: class
+{
+    void Initialize();
+    void Publish(TKey key, TMessage message);
+}
+--
+
+and the subscriber interface looks like this:
+
+[source]
+--
+public interface IConsumerStrategy<TKey,TMessage> : IDisposable where TMessage: class
+{
+    void Initialize();
+    void Consume(CancellationTokenSource cts, Action<TKey, TMessage> handler);
+}
+--
+
+This is only a first draft but I have managed to get a working implementation using Kafka as message bus. #The RabbitMQ implementation is nearly working. I have currently some problems when consuming the messages. All messages immediately go into the error queue without an error being rised client side...#
+
+== Running the application with Kafka
+
+To run a simple publisher and consumer pair using Apache Kafka as message bus I have created the file `docker-compose-kafka.yml`. This together with the script `start-kafka.sh` makes it easy to get the application going. The publisher send messages of type `TextMessage` and the subscriber consumes those. The messages are stored in the topic `test-topic` in Kakfa which (for parallelization reasons) is having 3 partitions. We are using Confluent Control Center to monitor the application. The publisher uses the implementation in `KafkaProducerStrategy.cs` class whilst the subscriber uses `KafkaConsumerStrategy.cs`.
+
+. Open a terminal window and navigate to the `pluggable` folder.
+
+. To run the application use this command:
++
+[source]
+--
+source start-kafka.sh
+--
+
+. Open Confluent Control Center at http://localhost.9021 to verify that data is produced. Note that Control Center needs a couple of minutes to initialize.
+
+. Use the `kafka-console-producer` tool to verify that data is indeed written to the topic `test-topic`:
++
+[source]
+--
+docker-compose -f docker-compose-kafka.yml exec kafka kafka-console-consumer \
+    --bootstrap-server kafka:9092 \
+    --group demo-consumer \
+    --topic test-topic \
+    --from-beginning
+--
+
+. Double check that the consumer is indeed consuming by looking into its logs:
++
+[source]
+--
+docker-compose -f docker-compose-kafka.yml logs -f consumer
+--
+
+. In Control Center 
+** navigate to *Topics* and investigate the topic `test-topic` (meesages, schema, etc.)
+** navigate to *Consumers* to observe the consumer lag of the consumer
+
+. When done, tear down the application with:
++
+[source]
+--
+docker-compose -f docker-compose-kafka.yml down -v
+--
+
+== Running the application with RabbitMQ and EasyNetQ
+
+To run the application using RabbitMQ and the EasyNetQ library I have define the file `docker-compose.yml`. We can also use the browser and navigate to http://localhost:15672 to monitor RabbitMQ using the management plugin.
+
+. Open a terminal window and navigate to the `pluggable` folder.
+
+. Start the application with:
++
+[source]
+--
+docker-compose up -d --build
+--
++
+This will start RabbitMQ (including the management plugin) and the publisher and subscriber. The publisher uses the implementation in `EasyNetQProducerStrategy.cs` class whilst the subscriber uses `EasyNetQConsumerStrategy.cs`. The parameter `--build` is used to instruct Docker Compose to first build the Docker images for publisher and consumer.
+
+. To monitor what's going on open a browser tab and navigate to http://localhost:15672.
++
+WARNING: Currently there is an issue with the consumer. All consumed messages go directly into the error queue. Brian, I am not an expert with RabbitMQ, maybe you can spot the error...
+
+. To follow the logs use this command:
++
+[source]
+--
+docker-compose logs -f
+--

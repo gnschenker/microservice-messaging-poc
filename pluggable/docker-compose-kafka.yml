@@ -70,3 +70,13 @@ services:
       kafka:
         condition: service_healthy
     command: dotnet run Kafka
+
+  consumer:
+    image: acm/consumer-kafka:1.0
+    build:
+        context: .
+        dockerfile: Dockerfile-consumer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: dotnet run Kafka

@@ -3,7 +3,7 @@ using EasyNetQ;
 
 namespace publisher
 {
-    public class EasyNetQStrategy<TKey,TMessage> : IPublisherStrategy<TKey,TMessage>
+    public class EasyNetQPublisherStrategy<TKey,TMessage> : IPublisherStrategy<TKey,TMessage>
         where TMessage: class
     {
         static readonly string RABBIT_HOST = "rabbitmq";

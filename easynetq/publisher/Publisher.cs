@@ -10,6 +10,7 @@ namespace publisher
     {
         static readonly string RABBIT_HOST = "rabbitmq";
         private static readonly AutoResetEvent _closing = new AutoResetEvent(false);
+        private static readonly Random rnd = new Random((int)DateTime.Now.Ticks);
 
         static void Main(string[] args)
         {
@@ -31,8 +32,11 @@ namespace publisher
             var bus = RabbitHutch.CreateBus($"host={RABBIT_HOST}");
             while (true)
             {
-                var message = new TextMessage{
-                    Text = "Hello beautiful world!"
+                var key = $"key-{rnd.Next(10) + 1}";
+                var points = new String('.', rnd.Next(20));
+                var message = new TextMessage
+                {
+                    Text = $"Hello EasyNetQ World{points}"
                 };
                 bus.Publish(message);
                 Console.WriteLine($"Sent '{message.Text}'");

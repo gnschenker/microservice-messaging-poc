@@ -6,7 +6,7 @@ using Confluent.Kafka.SyncOverAsync;
 
 namespace publisher
 {
-    public class KafkaStrategy<TKey,TMessage> : IPublisherStrategy<TKey,TMessage>
+    public class KafkaPublisherStrategy<TKey,TMessage> : IPublisherStrategy<TKey,TMessage>
         where TMessage: class
     {
         static readonly string KAFKA_HOST = "kafka:9092";

@@ -22,6 +22,7 @@ namespace consumer
                 Consuming(cts, args);
             });
             cts.Token.WaitHandle.WaitOne();
+            Console.WriteLine("### Exiting Application!");
         }
 
         private static void Consuming(CancellationTokenSource cts, string[] args)
@@ -39,7 +40,24 @@ namespace consumer
 
         private static IConsumerStrategy<string,TextMessage> GetStrategy(string[] args)
         {
-            return new EasyNetQConsumerStrategy<string,TextMessage>();
+            var value = args.Length == 0 ? "RabbitMQ" : args[0];
+            IConsumerStrategy<string, TextMessage> strategy;
+            switch(value)
+            {
+                // case "RabbitMQ": 
+                //     strategy = new RabbitMqConsumerStrategy<string, TextMessage>();
+                //     break;
+                case "EasyNetQ": 
+                    strategy = new EasyNetQConsumerStrategy<string, TextMessage>();
+                    break;
+                case "Kafka":
+                    strategy = new KafkaConsumerStrategy<string, TextMessage>();
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown consumer strategy: {value}");
+            }
+            Console.WriteLine($"Using strategy '{value}'");
+            return strategy;
         }
     }
 }
